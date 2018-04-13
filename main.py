@@ -7,7 +7,7 @@ import _pickle as pickle
 import torch
 from agent import Agent, load_agent
 from replay_memory import ReplayMemory, Transition
-from noise import Noise, OUNoise
+from exploration_noise import Noise, OUNoise
 
 parser = argparse.ArgumentParser(description='PyTorch DDPG example')
 parser.add_argument('--render', action='store_true', help='render the environment')
@@ -18,9 +18,8 @@ render = args.render
 play = args.play
 load = args.load
 
-env_name = 'Firefly-v0' # 'Pendulum-v0'
+env_name = 'Firefly-v1' # 'Pendulum-v0'
 env = gym.make(env_name)
-
 state_dim = env.observation_space.shape[0]
 action_dim = env.action_space.shape[0]
 memory_size = 1000000
@@ -32,7 +31,7 @@ agent = Agent(state_dim, action_dim, hidden_dim=64, tau=0.001)
 noise = Noise(action_dim, mean=0., std=std)
 #replay = ReplayMemory(memory_size)
 if play:
-    agent = load_agent(file='pretrained/model_6.0.pth.tar')
+    agent = load_agent(file='pretrained/model_7.pth.tar')
 if load:
     agent = load_agent(file='pretrained/model_6.0.pth.tar') #6.0
 
@@ -50,7 +49,6 @@ for episode in range(num_episodes):
             #print(action)
         next_state, reward, done, _ = env.step(action.cpu().numpy()[0])
         episode_reward += reward
-
         #action = torch.Tensor(action)
         mask = torch.Tensor([not done])
         next_state = torch.Tensor([next_state])
@@ -68,7 +66,7 @@ for episode in range(num_episodes):
             agent.learn(epochs=2, batch_size=batch_size)
 
         if done:
-            env.goal_radius -= 2e-4
+            #env.goal_radius -= 2e-4
             if play:
                 print(action)
                 print("radius: {:0.2f}".format(env.goal_radius))
